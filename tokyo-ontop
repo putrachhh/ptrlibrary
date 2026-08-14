@@ -714,7 +714,7 @@ function Speed_Library:CreateWindow(Config)
       return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
     end)
 
-    if success and content then
+    if success and content and typeof(content) == "string" then
       ProfileAvatar.Image = content
     end
   end)
