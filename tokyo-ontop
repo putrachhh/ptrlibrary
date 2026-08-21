@@ -1160,10 +1160,10 @@ function Speed_Library:CreateWindow(Config)
       TextSize = 12,
       TextTransparency = 0.6,
       TextXAlignment = Enum.TextXAlignment.Left,
-      TextYAlignment = Enum.TextYAlignment.Bottom,
+      TextYAlignment = Enum.TextYAlignment.Top,
       BackgroundTransparency = 0.999,
       BorderSizePixel = 0,
-      Position = UDim2.new(0, 10, 0, 23),
+      Position = UDim2.new(0, 10, 0, 19),
       Size = UDim2.new(1, -RightPad, 0, 12),
       Name = "FieldContent"
     }, Base)
