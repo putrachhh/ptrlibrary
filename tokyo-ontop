@@ -685,7 +685,7 @@ function Speed_Library:CreateWindow(Config)
     BackgroundTransparency = 1,
     Size = UDim2.new(0, 14, 0, 14),
     Position = UDim2.new(0, 6, 0.5, -7),
-    ImageColor3 = Custom.ColorRGB,
+    ImageColor3 = Color3.fromRGB(255, 255, 255),
     ImageTransparency = 0.25,
     Name = "SearchIcon",
     Parent = SidebarSearch
