@@ -681,7 +681,7 @@ function Speed_Library:CreateWindow(Config)
   })
 
   Custom:Create("ImageLabel", {
-    Image = "rbxassetid://10709761813",
+    Image = "rbxassetid://101575011640206",
     BackgroundTransparency = 1,
     Size = UDim2.new(0, 14, 0, 14),
     Position = UDim2.new(0, 6, 0.5, -7),
