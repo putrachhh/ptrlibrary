@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 
 local Custom = {} do
-  Custom.ColorRGB = Color3.fromRGB(190, 20, 130)
+  Custom.ColorRGB = Color3.fromRGB(222, 9, 231)
   function Custom:Create(Name, Properties, Parent)
     local _instance = Instance.new(Name)
 
@@ -125,7 +125,7 @@ local function OpenClose()
     Position = UDim2.new(0.1021, 0, 0.0743, 0),
     Size = UDim2.new(0, 45, 0, 45),
     Image = "rbxassetid://116663564072027",
-    Visible = true, -- [FIX] Logo selalu nyala dari awal
+    Visible = true,
   }, ScreenGui)
 
   Custom:Create("UICorner", {
@@ -357,7 +357,7 @@ function Speed_Library:CreateWindow(Config)
   local Title = Config[1] or Config.Title or ""
   local Description = Config[2] or Config.Description or ""
   local TabWidth = Config[3] or Config["Tab Width"] or 120
-  local SizeUi = Config[4] or Config.SizeUi or UDim2.fromOffset(650, 400)
+  local SizeUi = Config[4] or Config.SizeUi or UDim2.fromOffset(630, 390)
   local Icon = Config[5] or Config.Icon or ""
 
   local SpeedHubXGui = Custom:Create("ScreenGui", {
@@ -370,11 +370,17 @@ function Speed_Library:CreateWindow(Config)
   local DropShadowHolder = Custom:Create("Frame", {
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
-    Size = UDim2.new(0, 455, 0, 350),
+    Size = ResponsiveSize,
     ZIndex = 0,
     Name = "DropShadowHolder",
-    Position = UDim2.new(0, (SpeedHubXGui.AbsoluteSize.X // 2 - 455 // 2), 0, (SpeedHubXGui.AbsoluteSize.Y // 2 - 350 // 2))
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0, SpeedHubXGui.AbsoluteSize.X // 2, 0, SpeedHubXGui.AbsoluteSize.Y // 2)
   }, SpeedHubXGui)
+
+  local WindowUIScale = Custom:Create("UIScale", {
+    Scale = 1,
+    Name = "WindowUIScale"
+  }, DropShadowHolder)
 
   local DropShadow = Custom:Create("ImageLabel", {
     Image = "",
@@ -386,7 +392,7 @@ function Speed_Library:CreateWindow(Config)
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
     Position = UDim2.new(0.5, 0, 0.5, 0),
-    Size = ResponsiveSize,
+    Size = UDim2.new(1, 0, 1, 0),
     ZIndex = 0,
     Name = "DropShadow"
   }, DropShadowHolder)
@@ -398,11 +404,19 @@ function Speed_Library:CreateWindow(Config)
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     Position = UDim2.new(0.5, 0, 0.5, 0),
-    Size = ResponsiveSize,
+    Size = UDim2.new(1, 0, 1, 0),
     Name = "Main"
   }, DropShadow)
 
   Custom:Create("UICorner", {}, Main)
+
+  local ArtClipFrame = Custom:Create("Frame", {
+    BackgroundTransparency = 1,
+    ClipsDescendants = true,
+    Size = UDim2.new(1, 0, 1, 0),
+    ZIndex = 0,
+    Name = "ArtClipFrame"
+  }, Main)
 
   local MainStroke = Custom:Create("UIStroke", {
     Color = Custom.ColorRGB,
@@ -443,76 +457,152 @@ function Speed_Library:CreateWindow(Config)
 
   local Top = Custom:Create("Frame", {
     BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     Size = UDim2.new(1, 0, 0, 38),
     Name = "Top"
   }, Main)
 
-  local LogoOffset = 0
-  if Icon ~= "" then
-    Custom:Create("ImageLabel", {
-      Image = Icon,
-      ScaleType = Enum.ScaleType.Fit,
-      AnchorPoint = Vector2.new(0, 0.5),
+  -- ==========================================
+  -- TOP BAR INFO CONTAINER
+  -- ==========================================
+  local InfoContainer = Custom:Create("Frame", {
+    BackgroundTransparency = 1,
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, -130, 0, 0),
+    Size = UDim2.new(0, 400, 1, 0), 
+    Name = "InfoContainer",
+    Parent = Top
+  })
+
+  Custom:Create("UIListLayout", {
+    FillDirection = Enum.FillDirection.Horizontal,
+    HorizontalAlignment = Enum.HorizontalAlignment.Right, 
+    VerticalAlignment = Enum.VerticalAlignment.Center,
+    Padding = UDim.new(0, 6),
+    Parent = InfoContainer
+  })
+
+  function Speed_Library:AddTopInfo(Text)
+    local Pill = Custom:Create("Frame", {
+      BackgroundColor3 = Custom.ColorRGB,
+      BackgroundTransparency = 0.85, -- <-- GANTI INI JADI 0.85 (Awalnya 0)
+      BorderSizePixel = 0,
+      AutomaticSize = Enum.AutomaticSize.X,
+      Size = UDim2.new(0, 0, 0, 26),
+      Parent = InfoContainer
+    })
+
+    Custom:Create("UICorner", { CornerRadius = UDim.new(0, 8) }, Pill)
+    Custom:Create("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), Parent = Pill })
+
+    -- (Tambahan opsional biar ada garis pinggir tipis pink)
+    Custom:Create("UIStroke", {
+      Color = Custom.ColorRGB,
+      Thickness = 1,
+      Transparency = 0.3
+    }, Pill)
+
+    local PillText = Custom:Create("TextLabel", {
+      Font = Enum.Font.GothamBold,
+      Text = Text,
+      TextColor3 = Color3.fromRGB(255, 255, 255),
+      TextSize = 12,
+      AutomaticSize = Enum.AutomaticSize.X,
       BackgroundTransparency = 1,
-      Position = UDim2.new(0, 10, 0.5, 0),
-      Size = UDim2.new(0, 22, 0, 22),
-      Name = "LogoIcon"
-    }, Top)
+      Size = UDim2.new(0, 0, 1, 0),
+      Parent = Pill
+    })
 
-    Custom:Create("UICorner", {
-      CornerRadius = UDim.new(0, 5)
-    }, Top.LogoIcon)
+    if PremiumFX.HoverEffects then
+      local PillButton = Custom:Create("TextButton", {
+        Text = "", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Parent = Pill
+      })
+      PillButton.MouseEnter:Connect(function()
+        TweenService:Create(Pill, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play() -- <-- GANTI INI JADI 0.5 (Saat disorot mouse)
+      end)
+      PillButton.MouseLeave:Connect(function()
+        TweenService:Create(Pill, TweenInfo.new(0.15), {BackgroundTransparency = 0.85}):Play() -- <-- GANTI INI JADI 0.85 (Saat mouse pergi)
+      end)
+    end
 
-    LogoOffset = 40
+    return PillText 
   end
 
-  local TextLabel = Custom:Create("TextLabel", {
+  function Speed_Library:SetCharacterArt(ImageId, Config)
+    Config = Config or {}
+
+    local Art = Custom:Create("ImageLabel", {
+      Image = ImageId or "",
+      ImageTransparency = Config.Transparency or 0.4,
+      ScaleType = Enum.ScaleType.Fit,
+      BackgroundTransparency = 1,
+      AnchorPoint = Config.AnchorPoint or Vector2.new(0.5, 0.5),
+      Position = Config.Position or UDim2.new(0.5, 0, 0.78, 0),
+      Size = Config.Size or UDim2.new(0, 180, 0, 180),
+      ZIndex = 0,
+      Name = "CharacterArt",
+      Parent = ArtClipFrame
+    })
+
+    return Art
+  end
+
+  -- ==========================================
+  -- AUTO-LAYOUT JUDUL
+  -- ==========================================
+  local TopTitleContainer = Custom:Create("Frame", {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 10, 0, 0),
+    Size = UDim2.new(1, -250, 1, 0),
+    Name = "TopTitleContainer",
+    Parent = Top
+  })
+
+  Custom:Create("UIListLayout", {
+    FillDirection = Enum.FillDirection.Horizontal,
+    HorizontalAlignment = Enum.HorizontalAlignment.Left,
+    VerticalAlignment = Enum.VerticalAlignment.Center,
+    Padding = UDim.new(0, 10),
+    Parent = TopTitleContainer
+  })
+
+  if Icon ~= "" then
+    local LogoIcon = Custom:Create("ImageLabel", {
+      Image = Icon,
+      ScaleType = Enum.ScaleType.Fit,
+      BackgroundTransparency = 1,
+      Size = UDim2.new(0, 22, 0, 22),
+      Name = "LogoIcon",
+      Parent = TopTitleContainer
+    })
+    Custom:Create("UICorner", { CornerRadius = UDim.new(0, 5) }, LogoIcon)
+  end
+
+  Custom:Create("TextLabel", {
     FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.ExtraBold, Enum.FontStyle.Normal),
     Text = Title,
     TextColor3 = Color3.fromRGB(255, 255, 255),
     TextSize = 14,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
-    BorderColor3 = Color3.fromRGB(0, 0, 0),
-    BorderSizePixel = 0,
-    Size = UDim2.new(1, -100 - LogoOffset, 1, 0),
-    Position = UDim2.new(0, 10 + LogoOffset, 0, 0)
-  }, Top)
-
-  Custom:Create("UICorner", {}, Top)
+    AutomaticSize = Enum.AutomaticSize.X,
+    BackgroundTransparency = 1,
+    Size = UDim2.new(0, 0, 0, 22),
+    Parent = TopTitleContainer
+  })
 
   if Description ~= "" then
     Custom:Create("TextLabel", {
       FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-      Text = "•",
-      TextColor3 = Color3.fromRGB(120, 120, 120),
+      Text = Description,
+      TextColor3 = Custom.ColorRGB,
       TextSize = 14,
-      TextXAlignment = Enum.TextXAlignment.Left,
+      AutomaticSize = Enum.AutomaticSize.X,
       BackgroundTransparency = 1,
-      BorderSizePixel = 0,
-      Size = UDim2.new(0, 12, 1, 0),
-      Position = UDim2.new(0, TextLabel.TextBounds.X + 12 + LogoOffset, 0, 0),
-      Name = "TitleSeparator"
-    }, Top)
+      Size = UDim2.new(0, 0, 0, 22),
+      Parent = TopTitleContainer
+    })
   end
-
-  local TextLabel1 = Custom:Create("TextLabel", {
-    FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-    Text = Description,
-    TextColor3 = Custom.ColorRGB,
-    TextSize = 14,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
-    BorderColor3 = Color3.fromRGB(0, 0, 0),
-    BorderSizePixel = 0,
-    Size = UDim2.new(1, -(TextLabel.TextBounds.X + 130 + LogoOffset), 1, 0),
-    Position = UDim2.new(0, TextLabel.TextBounds.X + 28 + LogoOffset, 0, 0)
-  }, Top)
 
   local Close = Custom:Create("ImageLabel", {
     Image = "rbxassetid://10747384394",
@@ -552,7 +642,7 @@ function Speed_Library:CreateWindow(Config)
 
   local LayersTab = Custom:Create("Frame", {
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     Position = UDim2.new(0, 9, 0, 50),
@@ -563,6 +653,43 @@ function Speed_Library:CreateWindow(Config)
   Custom:Create("UICorner", {
     CornerRadius = UDim.new(0, 2)
   }, LayersTab)
+
+  -- ==========================================
+  -- SEARCH BAR SIDEBAR
+  -- ==========================================
+  local SidebarSearch = Custom:Create("Frame", {
+    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+    BackgroundTransparency = 0.95,
+    BorderSizePixel = 0,
+    Size = UDim2.new(1, -10, 0, 26),
+    Position = UDim2.new(0, 5, 0, 5),
+    Parent = LayersTab
+  })
+  Custom:Create("UICorner", { CornerRadius = UDim.new(0, 4) }, SidebarSearch)
+
+  local SearchInput = Custom:Create("TextBox", {
+    Font = Enum.Font.Gotham,
+    PlaceholderText = "Search...",
+    Text = "",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 11,
+    BackgroundTransparency = 1,
+    Size = UDim2.new(1, -25, 1, 0),
+    Position = UDim2.new(0, 25, 0, 0),
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = SidebarSearch
+  })
+
+  Custom:Create("ImageLabel", {
+    Image = "rbxassetid://10709761813",
+    BackgroundTransparency = 1,
+    Size = UDim2.new(0, 14, 0, 14),
+    Position = UDim2.new(0, 6, 0.5, -7),
+    ImageColor3 = Custom.ColorRGB,
+    ImageTransparency = 0.25,
+    Name = "SearchIcon",
+    Parent = SidebarSearch
+  })
 
   Custom:Create("Frame", {
     AnchorPoint = Vector2.new(0.5, 0),
@@ -577,7 +704,7 @@ function Speed_Library:CreateWindow(Config)
 
   local Layers = Custom:Create("Frame", {
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     Position = UDim2.new(0, TabWidth + 18, 0, 50),
@@ -597,7 +724,7 @@ function Speed_Library:CreateWindow(Config)
     TextWrapped = true,
     TextXAlignment = Enum.TextXAlignment.Left,
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     Size = UDim2.new(1, 0, 0, 30),
@@ -607,7 +734,7 @@ function Speed_Library:CreateWindow(Config)
   local LayersReal = Custom:Create("Frame", {
     AnchorPoint = Vector2.new(0, 1),
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
     ClipsDescendants = true,
@@ -628,21 +755,36 @@ function Speed_Library:CreateWindow(Config)
     EasingStyle = Enum.EasingStyle.Quad
   }, LayersFolder)
 
+  local function AnimatedGoToTab(TargetIndex)
+    local CurrentIndex = LayersPageLayout.CurrentPage.LayoutOrder
+    if TargetIndex == CurrentIndex then return end
+    if TargetIndex > CurrentIndex then
+      for _ = CurrentIndex, TargetIndex - 1 do
+        LayersPageLayout:Next()
+      end
+    else
+      for _ = CurrentIndex, TargetIndex + 1, -1 do
+        LayersPageLayout:Previous()
+      end
+    end
+  end
+
   local ScrollTab = Custom:Create("ScrollingFrame", {
     CanvasSize = UDim2.new(0, 0, 2.10000002, 0),
     ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
     ScrollBarThickness = 0,
     Active = true,
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BackgroundTransparency = 0.9990000128746033,
+    BackgroundTransparency = 0.999,
     BorderColor3 = Color3.fromRGB(0, 0, 0),
     BorderSizePixel = 0,
-    Size = UDim2.new(1, 0, 1, -10),
+    Position = UDim2.new(0, 0, 0, 36),
+    Size = UDim2.new(1, 0, 1, -82),
     Name = "ScrollTab"
   }, LayersTab)
 
   Custom:Create("UIListLayout", {
-    Padding = UDim.new(0, 0),
+    Padding = UDim.new(0, 4),
     SortOrder = Enum.SortOrder.LayoutOrder
   }, ScrollTab)
 
@@ -651,7 +793,7 @@ function Speed_Library:CreateWindow(Config)
 
     for _, v in pairs(ScrollTab:GetChildren()) do
       if v.Name ~= "UIListLayout" then
-        _Total = _Total + 3 + v.Size.Y.Offset
+        _Total = _Total + 4 + v.Size.Y.Offset
       end
     end
 
@@ -695,9 +837,17 @@ function Speed_Library:CreateWindow(Config)
     Thickness = 1.2
   }, ProfileAvatar)
 
+  local function MaskUsername(Name)
+    local VisibleChars = 3
+    if #Name <= VisibleChars then
+      return Name
+    end
+    return string.rep("*", #Name - VisibleChars) .. string.sub(Name, -VisibleChars)
+  end
+
   Custom:Create("TextLabel", {
     Font = Enum.Font.GothamBold,
-    Text = Player.Name,
+    Text = MaskUsername(Player.Name),
     TextColor3 = Color3.fromRGB(230, 230, 230),
     TextSize = 12,
     TextXAlignment = Enum.TextXAlignment.Left,
@@ -719,17 +869,33 @@ function Speed_Library:CreateWindow(Config)
     end
   end)
 
-  ScrollTab.Size = UDim2.new(1, 0, 1, -46)
+  local function AnimateWindowClose()
+    TweenService:Create(WindowUIScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.85}):Play()
+    TweenService:Create(DropShadow, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
+    task.delay(0.22, function()
+      DropShadowHolder.Visible = false
+    end)
+  end
 
-  -- [FIX] MinButton sekarang cuma nutup window utama, ga matiin logo toggle
+  local function AnimateWindowOpen()
+    DropShadowHolder.Visible = true
+    WindowUIScale.Scale = 0.85
+    DropShadow.ImageTransparency = 1
+    TweenService:Create(WindowUIScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+    TweenService:Create(DropShadow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 0.5}):Play()
+  end
+
   MinButton.Activated:Connect(function()
     CircleClick(Min, Player:GetMouse().X, Player:GetMouse().Y)
-    DropShadowHolder.Visible = false
+    AnimateWindowClose()
   end)
 
-  -- [FIX] Logo selalu visible, fungsinya diubah jadi Toggling (Buka/Tutup UI)
   Open_Close.Activated:Connect(function()
-    DropShadowHolder.Visible = not DropShadowHolder.Visible
+    if DropShadowHolder.Visible then
+      AnimateWindowClose()
+    else
+      AnimateWindowOpen()
+    end
   end)
 
   local ConfirmCloseGui = Custom:Create("Frame", {
@@ -823,12 +989,9 @@ function Speed_Library:CreateWindow(Config)
 
   YesBtn.Activated:Connect(function()
     if SpeedHubXGui then SpeedHubXGui:Destroy() end
-    
-    -- [FIX] Hancurkan juga ScreenGui tempat logo Open/Close berada
     if Open_Close and Open_Close.Parent then 
       Open_Close.Parent:Destroy() 
     end
-    
     if not Speed_Library.Unloaded then Speed_Library.Unloaded = true end
   end)
 
@@ -836,7 +999,6 @@ function Speed_Library:CreateWindow(Config)
     CloseConfirmGui()
   end)
 
-  DropShadowHolder.Size = UDim2.new(0, 140 + LogoOffset + TextLabel.TextBounds.X + 1 + TextLabel1.TextBounds.X, 0, 350)
   MakeDraggable(Top, DropShadowHolder)
 
   local MoreBlur = Custom:Create("Frame", {
@@ -962,14 +1124,20 @@ function Speed_Library:CreateWindow(Config)
 
     local Base = Custom:Create("Frame", {
       BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-      BackgroundTransparency = 0.935,
+      BackgroundTransparency = 0.88,
       BorderSizePixel = 0,
       LayoutOrder = LayoutOrder,
       Size = UDim2.new(1, 0, 0, 35),
       Name = "Field"
     }, Parent)
 
-    Custom:Create("UICorner", {CornerRadius = UDim.new(0, 4)}, Base)
+    Custom:Create("UICorner", {CornerRadius = UDim.new(0, 7)}, Base)
+
+    Custom:Create("UIStroke", {
+      Color = Color3.fromRGB(255, 255, 255),
+      Thickness = 1,
+      Transparency = 0.92
+    }, Base)
 
     local TitleLabel = Custom:Create("TextLabel", {
       Font = Enum.Font.GothamBold,
@@ -1055,7 +1223,7 @@ function Speed_Library:CreateWindow(Config)
     })
 
     Custom:Create("UICorner", {
-      CornerRadius = UDim.new(0, 4),
+      CornerRadius = UDim.new(0, 7),
       Parent = Tab
     })
 
@@ -1156,12 +1324,12 @@ function Speed_Library:CreateWindow(Config)
         end
 
         local _TabT = TweenService:Create(Tab, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.92})
-        local _FTween = TweenService:Create(FrameChoose, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Position = UDim2.new(0, 2, 0, 9 + (30 * Tab.LayoutOrder)) })
+        local _FTween = TweenService:Create(FrameChoose, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Position = UDim2.new(0, 2, 0, 9 + (34 * Tab.LayoutOrder)) })
 
         _TabT:Play()
         _FTween:Play()
 
-        LayersPageLayout:JumpToIndex(Tab.LayoutOrder)
+        AnimatedGoToTab(Tab.LayoutOrder)
 
         task.wait(0.05)
         NameTab.Text = _Name
@@ -1296,7 +1464,7 @@ function Speed_Library:CreateWindow(Config)
       }, SectionAdd)
 
       Custom:Create("UIListLayout", {
-        Padding = UDim.new(0, 3),
+        Padding = UDim.new(0, 6),
         SortOrder = Enum.SortOrder.LayoutOrder
       }, SectionAdd)
 
@@ -1327,14 +1495,14 @@ function Speed_Library:CreateWindow(Config)
 
           for _, v in pairs(SectionAdd:GetChildren()) do
             if v.Name ~= "UIListLayout" and v.Name ~= "UICorner" then
-              SectionSizeYWitdh = SectionSizeYWitdh + v.Size.Y.Offset + 3
+              SectionSizeYWitdh = SectionSizeYWitdh + v.Size.Y.Offset + 6
             end
           end
 
-          TweenService:Create(FeatureFrame, TweenInfo.new(0.1), {Rotation = 90}):Play()
-          TweenService:Create(Section, TweenInfo.new(0.1), {Size = UDim2.new(1, 1, 0, SectionSizeYWitdh)}):Play()
-          TweenService:Create(SectionAdd, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 0, SectionSizeYWitdh - 38)}):Play()
-          TweenService:Create(SectionDecideFrame, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 0, 2)}):Play()
+          TweenService:Create(FeatureFrame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 90}):Play()
+          TweenService:Create(Section, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 1, 0, SectionSizeYWitdh)}):Play()
+          TweenService:Create(SectionAdd, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, SectionSizeYWitdh - 38)}):Play()
+          TweenService:Create(SectionDecideFrame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 2)}):Play()
 
           task.wait(0.5)
           UpdateSizeScroll()
@@ -1349,12 +1517,12 @@ function Speed_Library:CreateWindow(Config)
         CircleClick(SectionButton, Player:GetMouse().X, Player:GetMouse().Y)
 
         if OpenSection then
-          TweenService:Create(FeatureFrame, TweenInfo.new(0.1), {Rotation = 0}):Play()
-          TweenService:Create(Section, TweenInfo.new(0.1), {Size = UDim2.new(1, 1, 0, 30)}):Play()
-          TweenService:Create(SectionDecideFrame, TweenInfo.new(0.1), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+          TweenService:Create(FeatureFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Rotation = 0}):Play()
+          TweenService:Create(Section, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 1, 0, 30)}):Play()
+          TweenService:Create(SectionDecideFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 2)}):Play()
 
           OpenSection = false
-          task.wait(0.1)
+          task.wait(0.2)
           UpdateSizeScroll()
         else
           OpenSection = true
@@ -1516,13 +1684,12 @@ function Speed_Library:CreateWindow(Config)
           Size = UDim2.new(1, 0, 1, 0)
         }, FeatureFrame1)
 
-        -- [FIXED] Hover Effect Button
         if PremiumFX.HoverEffects then
           ButtonButton.MouseEnter:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           ButtonButton.MouseLeave:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -1592,13 +1759,12 @@ function Speed_Library:CreateWindow(Config)
           CornerRadius = UDim.new(0, 15)
         }, ToggleCircle)
 
-        -- [FIXED] Hover Effect Toggle
         if PremiumFX.HoverEffects then
           ToggleButton.MouseEnter:Connect(function()
-            TweenService:Create(Toggle, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Toggle, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           ToggleButton.MouseLeave:Connect(function()
-            TweenService:Create(Toggle, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Toggle, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -1671,7 +1837,7 @@ function Speed_Library:CreateWindow(Config)
           TextSize = 13,
           TextWrapped = true,
           BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-          BackgroundTransparency = 0.9990000128746033,
+          BackgroundTransparency = 0.999,
           BorderColor3 = Color3.fromRGB(0, 0, 0),
           BorderSizePixel = 0,
           Position = UDim2.new(0, -1, 0, 0),
@@ -1681,7 +1847,7 @@ function Speed_Library:CreateWindow(Config)
         local SliderFrame = Custom:Create("Frame", {
           AnchorPoint = Vector2.new(1, 0.5),
           BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-          BackgroundTransparency = 0.800000011920929,
+          BackgroundTransparency = 0.8,
           BorderColor3 = Color3.fromRGB(0, 0, 0),
           BorderSizePixel = 0,
           Position = UDim2.new(1, -20, 0.5, 0),
@@ -1697,7 +1863,7 @@ function Speed_Library:CreateWindow(Config)
           BorderColor3 = Color3.fromRGB(0, 0, 0),
           BorderSizePixel = 0,
           Position = UDim2.new(0, 0, 0.5, 0),
-          Size = UDim2.new(0.899999976, 0, 0, 1),
+          Size = UDim2.new(0.9, 0, 0, 1),
           Name = "SliderDraggable",
         }, SliderFrame)
 
@@ -1719,13 +1885,12 @@ function Speed_Library:CreateWindow(Config)
           Color = Custom.ColorRGB,
         }, SliderCircle)
 
-        -- [FIXED] Hover Effect Slider
         if PremiumFX.HoverEffects then
           Slider.MouseEnter:Connect(function()
-            TweenService:Create(Slider, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Slider, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           Slider.MouseLeave:Connect(function()
-            TweenService:Create(Slider, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Slider, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -1766,7 +1931,6 @@ function Speed_Library:CreateWindow(Config)
             local CurrPosX = Input.Position.X
             if CurrPosX ~= _LastX then
               _LastX = CurrPosX
-
               local SizeScale = math.clamp((CurrPosX - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
               Funcs_Slider:Set(Min + ((Max - Min) * SizeScale))
             end
@@ -1847,13 +2011,12 @@ function Speed_Library:CreateWindow(Config)
           Name = "InputTextBox"
         }, InputFrame)
 
-        -- [FIXED] Hover Effect Input
         if PremiumFX.HoverEffects then
           InputTextBox.MouseEnter:Connect(function()
-            TweenService:Create(Input, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Input, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           InputTextBox.MouseLeave:Connect(function()
-            TweenService:Create(Input, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Input, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -1917,13 +2080,12 @@ function Speed_Library:CreateWindow(Config)
           CornerRadius = UDim.new(0, 4)
         }, SelectOptionsFrame)
 
-        -- [FIXED] Hover Effect Dropdown
         if PremiumFX.HoverEffects then
           DropdownButton.MouseEnter:Connect(function()
-            TweenService:Create(Dropdown, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Dropdown, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           DropdownButton.MouseLeave:Connect(function()
-            TweenService:Create(Dropdown, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Dropdown, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -2043,7 +2205,7 @@ function Speed_Library:CreateWindow(Config)
               local tweenInfoInOut = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
               local Size = isTextFound and UDim2.new(0, 1, 0, 12) or UDim2.new(0, 0, 0, 0)
-              local BackgroundTransparency = isTextFound and 0.935 or 0.999
+              local BackgroundTransparency = isTextFound and 0.88 or 0.999
               local Transparency = isTextFound and 0 or 0.999
 
               TweenService:Create(Drop.ChooseFrame, tweenInfoInOut, {Size = Size}):Play()
@@ -2149,31 +2311,25 @@ function Speed_Library:CreateWindow(Config)
 
           local function UpdateCanvasSize()
             local OffsetY = 0
-
             for _, child in ipairs(ScrollSelect:GetChildren()) do
               if child.Name ~= "UIListLayout" and child.Name ~= "SearchBar" then
                 OffsetY = OffsetY + 5 + child.Size.Y.Offset
               end
             end
-
             ScrollSelect.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
           end
 
           UpdateCanvasSize()
-
           DropCount += 1
         end
 
         function Funcs_Dropdown:Refresh(RefreshList, Selecting)
           RefreshList = RefreshList or {}
           Selecting = Selecting or {}
-
           Funcs_Dropdown:Clear()
-
           for _, Drop in ipairs(RefreshList) do
             Funcs_Dropdown:AddOption(Drop)
           end
-
           Funcs_Dropdown.Options = RefreshList
           Funcs_Dropdown:Set(Selecting)
         end
@@ -2185,9 +2341,6 @@ function Speed_Library:CreateWindow(Config)
         return Funcs_Dropdown
       end
 
-      -- ==========================================
-      -- [NEW] KOMPONEN KEYBIND 
-      -- ==========================================
       function Item:AddBind(Config)
         local Title = Config[1] or Config.Title or ""
         local Content = Config[2] or Config.Content or ""
@@ -2228,10 +2381,10 @@ function Speed_Library:CreateWindow(Config)
 
         if PremiumFX.HoverEffects then
           BindButton.MouseEnter:Connect(function()
-            TweenService:Create(Bind, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
+            TweenService:Create(Bind, TweenInfo.new(0.15), {BackgroundTransparency = 0.78}):Play()
           end)
           BindButton.MouseLeave:Connect(function()
-            TweenService:Create(Bind, TweenInfo.new(0.15), {BackgroundTransparency = 0.935}):Play()
+            TweenService:Create(Bind, TweenInfo.new(0.15), {BackgroundTransparency = 0.88}):Play()
           end)
         end
 
@@ -2247,7 +2400,6 @@ function Speed_Library:CreateWindow(Config)
         UserInputService.InputBegan:Connect(function(input, gameProcessed)
           if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
             local key = input.KeyCode
-            -- Bisa hapus bind pakai Escape atau Backspace
             if key == Enum.KeyCode.Escape or key == Enum.KeyCode.Backspace then
                 Funcs_Bind.Value = Enum.KeyCode.Unknown
                 BindText.Text = "None"
@@ -2281,9 +2433,6 @@ function Speed_Library:CreateWindow(Config)
     return Sections
   end
 
-  -- ==========================================
-  -- RESIZE UI
-  -- ==========================================
   local Resizer = Custom:Create("TextButton", {
     Name = "Resizer",
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -2322,7 +2471,7 @@ function Speed_Library:CreateWindow(Config)
 
       Layers.Size = UDim2.new(1, -(TabWidth + 9 + 18), 1, -59)
       LayersTab.Size = UDim2.new(0, TabWidth, 1, -59)
-      ScrollTab.Size = UDim2.new(1, 0, 1, -46)
+      ScrollTab.Size = UDim2.new(1, 0, 1, -82) 
     end
   end)
 
