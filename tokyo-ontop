@@ -356,16 +356,52 @@ end
 function Speed_Library:CreateWindow(Config)
   local Title = Config[1] or Config.Title or ""
   local Description = Config[2] or Config.Description or ""
-  local TabWidth = Config[3] or Config["Tab Width"] or 120
+
+  -- [MOBILE] Deteksi mobile dipindah paling atas -- sebelumnya baru dihitung
+  -- belakangan dan cuma dipakai buat 1 hal (ukuran window). Sekarang TabWidth,
+  -- ukuran tombol topbar, dan batas resize semuanya ikut baca variabel ini.
+  local IsMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+
+  local TabWidth = Config[3] or Config["Tab Width"] or (IsMobile and 92 or 120)
   local SizeUi = Config[4] or Config.SizeUi or UDim2.fromOffset(630, 390)
   local Icon = Config[5] or Config.Icon or ""
+
+  -- [FIX] Pelacak koneksi global (UserInputService dsb). Koneksi yang dibuat
+  -- ke service global TIDAK otomatis putus walau instance GUI-nya di-Destroy(),
+  -- jadi harus di-disconnect manual saat window di-unload (lihat YesBtn.Activated).
+  local GlobalConnections = {}
+  local function Track(Conn)
+    table.insert(GlobalConnections, Conn)
+    return Conn
+  end
 
   local SpeedHubXGui = Custom:Create("ScreenGui", {
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling
   }, RunService:IsStudio() and Player.PlayerGui or (gethui() or cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")))
 
-  local IsMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
-  local ResponsiveSize = IsMobile and UDim2.new(0, 420, 0, 260) or SizeUi
+  -- [MOBILE] Sebelumnya window mobile selalu 420x260 flat, sama rata buat
+  -- semua HP -- di layar kecil (mis. iPhone SE) itu kegedean relatif, di
+  -- layar gede (tablet/HP flagship) itu keciiil banget & nyisain banyak
+  -- ruang kosong di layar. Sekarang dihitung dari ViewportSize asli device,
+  -- dengan clamp biar tetap masuk akal di kedua ekstrem.
+  local ViewportSize = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800, 600)
+
+  local function GetMobileWindowSize()
+    local W = math.clamp(math.floor(ViewportSize.X * 0.92), 340, 580)
+    local H = math.clamp(math.floor(ViewportSize.Y * 0.62), 300, 480)
+    return UDim2.new(0, W, 0, H)
+  end
+
+  local ResponsiveSize = IsMobile and GetMobileWindowSize() or SizeUi
+
+  -- [MOBILE] Batas resize manual (dipakai di Resizer paling bawah) dulu
+  -- fixed 400-1200 / 250-800 buat PC maupun HP -- padahal ukuran default
+  -- mobile aja cuma 420x260, jadi ruang gerak resize di HP nyaris 0.
+  -- Sekarang batas bawah lebih longgar & batas atas ngikut layar device.
+  local MinWinWidth = IsMobile and 300 or 400
+  local MaxWinWidth = IsMobile and math.max(MinWinWidth, math.floor(ViewportSize.X * 0.98)) or 1200
+  local MinWinHeight = IsMobile and 220 or 250
+  local MaxWinHeight = IsMobile and math.max(MinWinHeight, math.floor(ViewportSize.Y * 0.9)) or 800
 
   local DropShadowHolder = Custom:Create("Frame", {
     BackgroundTransparency = 1,
@@ -604,6 +640,15 @@ function Speed_Library:CreateWindow(Config)
     })
   end
 
+  -- [MOBILE] Icon Close/Min dibesarkan di HP (18px -> 28px). Sebelumnya
+  -- hitbox-nya PERSIS sama dengan ukuran icon (18x18px) -- jauh di bawah
+  -- standar touch target minimum (44px iOS / 48px Android). Posisi Min
+  -- dihitung dari rumus supaya jarak antar tombol tetap konsisten (~10px)
+  -- di PC maupun HP (formula ini menghasilkan -36 persis seperti nilai
+  -- original saat TopBtnSize = 18, jadi tampilan PC tidak berubah sama sekali).
+  local TopBtnSize = IsMobile and 28 or 18
+  local MinBtnOffset = -(8 + TopBtnSize + 10)
+
   local Close = Custom:Create("ImageLabel", {
     Image = "rbxassetid://10747384394",
     ImageColor3 = Color3.fromRGB(255, 255, 255),
@@ -611,7 +656,7 @@ function Speed_Library:CreateWindow(Config)
     AnchorPoint = Vector2.new(1, 0.5),
     BackgroundTransparency = 1,
     Position = UDim2.new(1, -8, 0.5, 0),
-    Size = UDim2.new(0, 18, 0, 18),
+    Size = UDim2.new(0, TopBtnSize, 0, TopBtnSize),
     Name = "Close"
   }, Top)
 
@@ -628,8 +673,8 @@ function Speed_Library:CreateWindow(Config)
     ScaleType = Enum.ScaleType.Fit,
     AnchorPoint = Vector2.new(1, 0.5),
     BackgroundTransparency = 1,
-    Position = UDim2.new(1, -36, 0.5, 0),
-    Size = UDim2.new(0, 18, 0, 18),
+    Position = UDim2.new(1, MinBtnOffset, 0.5, 0),
+    Size = UDim2.new(0, TopBtnSize, 0, TopBtnSize),
     Name = "Min"
   }, Top)
 
@@ -792,7 +837,7 @@ function Speed_Library:CreateWindow(Config)
     local _Total = 0
 
     for _, v in pairs(ScrollTab:GetChildren()) do
-      if v.Name ~= "UIListLayout" then
+      if v.Name ~= "UIListLayout" and v.Visible then
         _Total = _Total + 4 + v.Size.Y.Offset
       end
     end
@@ -802,6 +847,23 @@ function Speed_Library:CreateWindow(Config)
 
   ScrollTab.ChildAdded:Connect(UpdateSize)
   ScrollTab.ChildRemoved:Connect(UpdateSize)
+
+  -- [FIX] Sidebar search dulu cuma dekorasi, gak nyambung ke apa-apa.
+  -- Sekarang benar-benar memfilter daftar tab berdasarkan judulnya (TabName).
+  SearchInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local SearchText = string.lower(SearchInput.Text)
+
+    for _, v in pairs(ScrollTab:GetChildren()) do
+      if v.Name == "Tab" then
+        local TabNameLabel = v:FindFirstChild("TabName")
+        if TabNameLabel then
+          v.Visible = SearchText == "" or string.find(string.lower(TabNameLabel.Text), SearchText, 1, true) ~= nil
+        end
+      end
+    end
+
+    UpdateSize()
+  end)
 
   local ProfileBar = Custom:Create("Frame", {
     AnchorPoint = Vector2.new(0, 1),
@@ -993,6 +1055,13 @@ function Speed_Library:CreateWindow(Config)
       Open_Close.Parent:Destroy() 
     end
     if not Speed_Library.Unloaded then Speed_Library.Unloaded = true end
+
+    -- [FIX] Putuskan semua koneksi global (slider drag, keybind, resizer) supaya
+    -- tidak terus berjalan di background setelah window ditutup.
+    for _, Conn in ipairs(GlobalConnections) do
+      pcall(function() Conn:Disconnect() end)
+    end
+    table.clear(GlobalConnections)
   end)
 
   CancelBtn.Activated:Connect(function()
@@ -1146,6 +1215,10 @@ function Speed_Library:CreateWindow(Config)
       TextSize = 13,
       TextXAlignment = Enum.TextXAlignment.Left,
       TextYAlignment = Enum.TextYAlignment.Top,
+      -- [MOBILE] Dulu gak ada truncate: kalau layar sempit (RightPad makan
+      -- porsi lebih besar dari lebar row), judul panjang bisa numpuk visual
+      -- sama kontrol (toggle/slider/dropdown) di sebelah kanan.
+      TextTruncate = Enum.TextTruncate.AtEnd,
       BackgroundTransparency = 0.999,
       BorderSizePixel = 0,
       Position = UDim2.new(0, 10, 0, 10),
@@ -1247,11 +1320,14 @@ function Speed_Library:CreateWindow(Config)
       TextColor3 = Color3.fromRGB(255, 255, 255),
       TextSize = 13,
       TextXAlignment = Enum.TextXAlignment.Left,
+      -- [MOBILE] TabWidth mengecil di HP (92px vs 120px PC), jadi nama tab
+      -- yang panjang lebih gampang kepotong tanpa truncate rapi.
+      TextTruncate = Enum.TextTruncate.AtEnd,
       BackgroundColor3 = Color3.fromRGB(255, 255, 255),
       BackgroundTransparency = 0.999,
       BorderColor3 = Color3.fromRGB(0, 0, 0),
       BorderSizePixel = 0,
-      Size = UDim2.new(1, 0, 1, 0),
+      Size = UDim2.new(1, -8, 1, 0),
       Position = UDim2.new(0, 30, 0, 0),
       Name = "TabName",
     }, Tab)
@@ -1809,6 +1885,16 @@ function Speed_Library:CreateWindow(Config)
         local Default = Config[6] or Config.Default or 50
         local Callback = Config[7] or Config.Callback or function() end
 
+        -- [FIX] Jaga-jaga Increment 0/negatif atau Max <= Min: dulu bisa bikin
+        -- division-by-zero (NaN) di Round()/Set() dan slider jadi rusak posisinya.
+        if type(Increment) ~= "number" or Increment <= 0 then
+          Increment = 1
+        end
+        if type(Min) ~= "number" then Min = 0 end
+        if type(Max) ~= "number" or Max <= Min then
+          Max = Min + 100
+        end
+
         local Funcs_Slider = {Value = Default}
 
         local Slider, _, SliderContent = CreateFieldBase(SectionAdd, ItemCount, Title, Content, 180)
@@ -1926,7 +2012,7 @@ function Speed_Library:CreateWindow(Config)
         end)
 
         local _LastX = nil
-        UserInputService.InputChanged:Connect(function(Input)
+        Track(UserInputService.InputChanged:Connect(function(Input)
           if Dragging then
             local CurrPosX = Input.Position.X
             if CurrPosX ~= _LastX then
@@ -1935,7 +2021,7 @@ function Speed_Library:CreateWindow(Config)
               Funcs_Slider:Set(Min + ((Max - Min) * SizeScale))
             end
           end
-        end)
+        end))
 
         TextBox:GetPropertyChangedSignal("Text"):Connect(function()
           local Valid = TextBox.Text:gsub("[^%d]", "")
@@ -1957,7 +2043,7 @@ function Speed_Library:CreateWindow(Config)
           end
         end)
 
-        Funcs_Slider:Set(tonumber(Default))
+        Funcs_Slider:Set(tonumber(Default) or Min)
         Callback(Funcs_Slider.Value)
 
         ItemCount += 1
@@ -2194,6 +2280,7 @@ function Speed_Library:CreateWindow(Config)
               DropFrame:Destroy()
             end
           end
+          DropCount = 0 -- [FIX] reset supaya Refresh() berulang tidak membengkakkan LayoutOrder
         end
 
         function Funcs_Dropdown:Set(Value)
@@ -2397,7 +2484,7 @@ function Speed_Library:CreateWindow(Config)
           TweenService:Create(BindFrame, TweenInfo.new(0.15), {BackgroundColor3 = Custom.ColorRGB}):Play()
         end)
 
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        Track(UserInputService.InputBegan:Connect(function(input, gameProcessed)
           if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
             local key = input.KeyCode
             if key == Enum.KeyCode.Escape or key == Enum.KeyCode.Backspace then
@@ -2414,7 +2501,7 @@ function Speed_Library:CreateWindow(Config)
               Callback(Funcs_Bind.Value)
             end
           end
-        end)
+        end))
 
         function Funcs_Bind:Set(key)
           Funcs_Bind.Value = key
@@ -2433,13 +2520,19 @@ function Speed_Library:CreateWindow(Config)
     return Sections
   end
 
+  -- [MOBILE] Hitbox Resizer dibesarkan di HP (20x20 -> 34x34). 20px jauh
+  -- di bawah standar touch target minimum, gampang meleset kalau dipegang
+  -- jari. Posisi dihitung dari ResizerSize supaya sudut kanan-bawah tetap
+  -- pas nempel di pojok Main, sama seperti versi original.
+  local ResizerSize = IsMobile and 34 or 20
+
   local Resizer = Custom:Create("TextButton", {
     Name = "Resizer",
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
-    Position = UDim2.new(1, -20, 1, -20),
-    Size = UDim2.new(0, 20, 0, 20),
+    Position = UDim2.new(1, -ResizerSize, 1, -ResizerSize),
+    Size = UDim2.new(0, ResizerSize, 0, ResizerSize),
     Text = "",
     ZIndex = 50
   }, Main)
@@ -2456,12 +2549,12 @@ function Speed_Library:CreateWindow(Config)
     end
   end)
 
-  UserInputService.InputChanged:Connect(function(input)
+  Track(UserInputService.InputChanged:Connect(function(input)
     if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
       local delta = input.Position - resizeStart
 
-      local newWidth = math.clamp(startSize.X + delta.X, 400, 1200)
-      local newHeight = math.clamp(startSize.Y + delta.Y, 250, 800)
+      local newWidth = math.clamp(startSize.X + delta.X, MinWinWidth, MaxWinWidth)
+      local newHeight = math.clamp(startSize.Y + delta.Y, MinWinHeight, MaxWinHeight)
 
       local newSize = UDim2.new(0, newWidth, 0, newHeight)
 
@@ -2473,13 +2566,13 @@ function Speed_Library:CreateWindow(Config)
       LayersTab.Size = UDim2.new(0, TabWidth, 1, -59)
       ScrollTab.Size = UDim2.new(1, 0, 1, -82) 
     end
-  end)
+  end))
 
-  UserInputService.InputEnded:Connect(function(input)
+  Track(UserInputService.InputEnded:Connect(function(input)
     if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and isResizing then
       isResizing = false
     end
-  end)
+  end))
 
   return Tabs
 end
