@@ -23,9 +23,8 @@ local Custom = {} do
 
 end
 
--- ==========================================
 -- PREMIUM UI SETTINGS
--- ==========================================
+
 local PremiumFX = {
   AnimatedBorder = true,
   IntroAnimation = true,
