@@ -1670,8 +1670,9 @@ function ProjectZero:Window(GuiConfig)
 
         local MainButton = Instance.new("ImageLabel")
         MainButton.Parent = ScreenGui
-        MainButton.Size = UDim2.new(0, 40, 0, 40)
-        MainButton.Position = UDim2.new(0, 20, 0, 150)
+        MainButton.AnchorPoint = Vector2.new(0.5, 0)          -- titik tumpu di tengah, biar bener-bener center
+        MainButton.Size = UDim2.new(0, 52, 0, 52)             -- sebelumnya 40x40
+        MainButton.Position = UDim2.new(0.5, 0, 0, 10)        -- tengah atas
         MainButton.BackgroundTransparency = 1
         MainButton.Image = "rbxassetid://" .. (GuiConfig.ToggleImage or "133666454974130") -- logo tombol toggle
         MainButton.ScaleType = Enum.ScaleType.Fit
